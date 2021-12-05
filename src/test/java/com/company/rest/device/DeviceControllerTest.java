@@ -55,6 +55,26 @@ public class DeviceControllerTest {
     }
 
     @Test
+    public void createDeviceWrongMacAddress() throws Exception {
+        var macAddress = "AA:AA:BB:AA:10";
+        var deviceType = DeviceType.ACCESS_POINT;
+        var request = new CreateDeviceRequest(macAddress, deviceType, null);
+        var model = EntityModel.of(LoadDeviceResponse.of(new Device(macAddress, deviceType)));
+
+        when(service.createDevice(request)).thenReturn(model);
+        mockMvc
+                .perform(put("/device")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsString(request)))
+                .andDo(print())
+                .andExpect(status().is4xxClientError())
+                .andExpect(content().json(
+                        "{\"message\":\"Validation Failed\",\"details\":[\"Invalid mac address format\"]}")
+                );
+    }
+
+    @Test
     public void loadById() throws Exception {
         var macAddress = "AA:BB:10:12:12:12";
         var model = EntityModel.of(
